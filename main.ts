@@ -1,9 +1,25 @@
 import { parseArgs } from '@std/cli/parse-args'; //cliffy still sucks
 
-const args = parseArgs(Deno.args);
-const command = args._[0];
+const parsed = parseArgs(Deno.args);
+const [command, ...restArgs] = parsed._ as string[];
 
-if (args._.length === 0 || command === 'help' ) {
-  console.log('No command given');
+if (parsed._.length === 0 || command === 'help' || command === '--help' || command === '-h') {
   Deno.exit(1);
 }
+
+const cmdName = command ?? 'help';
+
+try {
+  const module = await import(`./commands/${command}.ts`);
+
+  if (module.default instanceof Function) {
+    module.default(restArgs, parsed);
+  } else {
+    console.log (`bro literally pissed off in ${cmdName}`);
+    Deno.exit(1);
+  }
+} catch (e) {
+  console.error(`Command ${cmdName} not found`);
+  Deno.exit(1);
+}
+
