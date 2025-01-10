@@ -18,7 +18,7 @@ try {
     console.log (`bro literally pissed off in ${cmdName}`);
     Deno.exit(1);
   }
-} catch (e) {
+} catch (_e) {
   console.error(`Command ${cmdName} not found`);
   Deno.exit(1);
 }
