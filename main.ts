@@ -1,4 +1,4 @@
-import { parseArgs } from '@std/cli/parse-args'; //cliffy still sucks
+import { parseArgs } from '@std/cli/parse-args'; //cliffy sucks
 
 const parsed = parseArgs(Deno.args);
 const [command, ...restArgs] = parsed._ as string[];
