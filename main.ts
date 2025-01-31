@@ -8,11 +8,6 @@ const cmdName = command ?? 'help';
 try {
   const module = await import(`./commands/${command}.ts`);
 
-  // if (parsed._.length === 0 || command === 'help' || command === '--help' || command === '-h') {
-    
-  //   Deno.exit(1); /refactor
-  // }
-
   if (module.default instanceof Function) {
     module.default(restArgs, parsed);
   } else {

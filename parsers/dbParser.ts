@@ -1,3 +1,19 @@
+import type { Connection as MongooseConnection } from "mongoose";
+import type { Pool as MySQLPool } from "mysql2/promise";
+import type { Pool as PostgresPool } from "pg";
+import type betterSqlite3 from "better-sqlite3";
+import type { RedisClientType } from "redis";
+type DenoKv = Deno.Kv;
+
+export type DBConnection =
+  | MongooseConnection
+  | MySQLPool
+  | PostgresPool
+  | betterSqlite3.Database
+  | RedisClientType
+  | DenoKv
+  | undefined;
+
 
 export default async function dbParse(source: string) {
     const dbMatch = source.match(/@db\s+(\w+);/);
@@ -12,7 +28,7 @@ export default async function dbParse(source: string) {
         if (!port) port = "27017";
         log(`Используем MongoDB на порту ${port}`);
   
-        const { connect, connection } = await import("mongoose"); // debug
+        const mongoose = await import("mongoose");
         await mongoose.connect(`mongodb://localhost:${port}/my_database`);
         
         return mongoose.connection;
@@ -87,7 +103,7 @@ export default async function dbParse(source: string) {
         return;
   
       default: {
-        log(`Неизвестная БД: "${db}". Используем Deno KV по умолчанию.`);
+        log(`Unknown db: "${db}". Using Deno KV instead.`);
   
         if (!port) port = "kv.db";
         const kv = await Deno.openKv(port);
