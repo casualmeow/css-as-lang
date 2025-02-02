@@ -1,6 +1,9 @@
 import terminalLink from 'terminal-link';
 
 export default function help(_string: [], _options: Record<string, unknown>) {
-    const githubRepo = terminalLink('click', 'https://github.com/casualmeow/css-as-lang'); //refactor no normal link / allow-sys flag expected
-    console.log(githubRepo); 
+    console.log(`Commands:
+        build [file] [flags] - compiling the backend for css project.
+           file flags: 
+           -nodb - do not parse database (exchanges the build speed proecess)
+           `)
 }

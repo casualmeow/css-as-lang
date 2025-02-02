@@ -16,17 +16,17 @@ export type DBConnection =
 
 
 export default async function dbParse(source: string) {
-    const dbMatch = source.match(/@db\s+(\w+);/);
+    const dbMatch = source.match(/@db\s*:?\s*["']?(\w+)["']?/);
     const db = dbMatch?.[1] ?? "";
     const portMatch = source.match(/@dbport\s+(\d+);/);
     let port = portMatch?.[1] ?? "";
   
     const log = (msg: string) => console.log(`[dbParse] ${msg}`);
   
-    switch (db.toLowerCase()) {
+    switch (db.toLowerCase()) { // refactor log to spinner msgs
       case "mongodb": {
         if (!port) port = "27017";
-        log(`Используем MongoDB на порту ${port}`);
+        log(`using port ${port}`);
   
         const mongoose = await import("mongoose");
         await mongoose.connect(`mongodb://localhost:${port}/my_database`);
@@ -37,7 +37,7 @@ export default async function dbParse(source: string) {
       case "mysql":
       case "mariadb": {
         if (!port) port = "3306";
-        log(`Используем MySQL/MariaDB на порту ${port}`);
+        log(`using MySQL/MariaDB at port ${port}`);
         const mysql2 = await import("mysql2");
         const connection = mysql2.createPool({
           host: "localhost",
@@ -50,7 +50,7 @@ export default async function dbParse(source: string) {
         await new Promise<void>((resolve, reject) => {
           connection.getConnection((err, conn) => {
             if (err) return reject(err);
-            log("Успешное соединение с MySQL/MariaDB!");
+            log("connected with MySQL/MariaDB");
             conn.release();
             resolve();
           });
@@ -62,7 +62,7 @@ export default async function dbParse(source: string) {
       case "postgresql":
       case "postgres": {
         if (!port) port = "5432";
-        log(`Используем PostgreSQL на порту ${port}`);
+        log(`using PostgreSQL at port ${port}`);
   
         const { Pool } = await import("pg");
   
@@ -74,34 +74,37 @@ export default async function dbParse(source: string) {
           database: "my_database",
         });
         await pool.connect();
-        log("Успешное соединение с PostgreSQL!");
+        log("connected with PostgreSQL!");
   
         return pool;
       }
       case "sqlite": {
         const dbFile = port || "my_database.sqlite";
-        log(`Используем SQLite: файл ${dbFile}`);
+        log(`using sqlite SQLite with port ${dbFile}`);
   
-        const betterSqlite3 = await import("better-sqlite3");
+        const betterSqlite3 = await import("better-sqlite3"); // idk maybe refacttor to another lib
         const sqliteDb = new betterSqlite3.default(dbFile);
         return sqliteDb;
       }
       case "redis": {
         if (!port) port = "6379";
-        log(`Используем Redis на порту ${port}`);
+        log(`using Redis with port ${port}`);
         const redisPkg = await import("redis");
         const client = redisPkg.createClient({
           socket: { host: "localhost", port: +port }
         });
         await client.connect();
   
-        log("Успешное соединение с Redis!");
+        log("connected to Redis");
         return client;
       }
 
-      case "":
-        return;
-  
+      case "": {
+        if (!port) port = "kv.db";
+        log(`No database directive found. Using default Deno KV with file ${port}`);
+        const kv = await Deno.openKv(port);
+        return kv;
+      }
       default: {
         log(`Unknown db: "${db}". Using Deno KV instead.`);
   
